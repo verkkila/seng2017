@@ -1,0 +1,7 @@
+pep8
+flake8
+nose
+radon
+autopep8
+pytest
+
