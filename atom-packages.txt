@@ -1,4 +1,3 @@
-language-python
 linter
 linter-pycodestyle
 linter-pyflakes
