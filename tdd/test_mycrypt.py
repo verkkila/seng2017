@@ -29,7 +29,9 @@ def test_encode(test_input, expected):
 
 
 @pytest.mark.parametrize("test_input", [
-    'a', 'b', 'c', 'abbaacdc', u'!#€%#€%#€%#€%#'
+    'a', 'b', 'c',
+    'abbaacdc', u'!#€%#€%#€%#€%#',
+    u"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!\"#€%&/()="
 ])
 def test_encode_decode(test_input):
     '''Verify that decoding an encoded string returns original string'''
