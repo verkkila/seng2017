@@ -1,32 +1,33 @@
-## This file is part of Scapy
-## See http://www.secdev.org/projects/scapy for more informations
-## Copyright (C) Philippe Biondi <phil@secdev.org>
-## This program is published under a GPLv2 license
+# This file is part of Scapy
+# See http://www.secdev.org/projects/scapy for more informations
+# Copyright (C) Philippe Biondi <phil@secdev.org>
+# This program is published under a GPLv2 license
 
 """
 Instanciate part of the customizations needed to support Microsoft Windows.
 """
 
 from scapy.arch.consts import LOOPBACK_NAME
-from scapy.config import conf,ConfClass
+from scapy.config import conf, ConfClass
 
-def sndrcv(pks, pkt, timeout = 2, inter = 0, verbose=None, chainCC=0, retry=0, multi=0):
+
+def sndrcv(pks, pkt, timeout=2, inter=0, verbose=None, chainCC=0, retry=0, multi=0):
     if not isinstance(pkt, Gen):
         pkt = SetGen(pkt)
-        
+
     if verbose is None:
         verbose = conf.verb
     from scapy.sendrecv import debug
-    debug.recv = plist.PacketList([],"Unanswered")
-    debug.sent = plist.PacketList([],"Sent")
+    debug.recv = plist.PacketList([], "Unanswered")
+    debug.sent = plist.PacketList([], "Sent")
     debug.match = plist.SndRcvList([])
-    nbrecv=0
+    nbrecv = 0
     ans = []
     # do it here to fix random fields, so that parent and child have the same
     all_stimuli = tobesent = [p for p in pkt]
     notans = len(tobesent)
 
-    hsent={}
+    hsent = {}
     for i in tobesent:
         h = i.hashret()
         if h in hsent:
@@ -35,18 +36,17 @@ def sndrcv(pks, pkt, timeout = 2, inter = 0, verbose=None, chainCC=0, retry=0, m
             hsent[h] = [i]
     if retry < 0:
         retry = -retry
-        autostop=retry
+        autostop = retry
     else:
-        autostop=0
-
+        autostop = 0
 
     while retry >= 0:
-        found=0
-    
+        found = 0
+
         if timeout < 0:
             timeout = None
 
-        pid=1
+        pid = 1
         try:
             if WINDOWS or pid == 0:
                 try:
@@ -69,13 +69,14 @@ def sndrcv(pks, pkt, timeout = 2, inter = 0, verbose=None, chainCC=0, retry=0, m
                         log_runtime.info("--- Error sending packets")
                 finally:
                     try:
-                        sent_times = [p.sent_time for p in all_stimuli if p.sent_time]
+                        sent_times = [
+                            p.sent_time for p in all_stimuli if p.sent_time]
                     except:
                         pass
             if WINDOWS or pid > 0:
-                # Timeout starts after last packet is sent (as in Unix version) 
+                # Timeout starts after last packet is sent (as in Unix version)
                 if timeout:
-                    stoptime = time.time()+timeout
+                    stoptime = time.time() + timeout
                 else:
                     stoptime = 0
                 remaintime = None
@@ -83,7 +84,7 @@ def sndrcv(pks, pkt, timeout = 2, inter = 0, verbose=None, chainCC=0, retry=0, m
                     try:
                         while 1:
                             if stoptime:
-                                remaintime = stoptime-time.time()
+                                remaintime = stoptime - time.time()
                                 if remaintime <= 0:
                                     break
                             r = pks.recv(MTU)
@@ -120,7 +121,7 @@ def sndrcv(pks, pkt, timeout = 2, inter = 0, verbose=None, chainCC=0, retry=0, m
                             raise
                 finally:
                     if WINDOWS:
-                        for p,t in zip(all_stimuli, sent_times):
+                        for p, t in zip(all_stimuli, sent_times):
                             p.sent_time = t
         finally:
             pass
@@ -128,34 +129,35 @@ def sndrcv(pks, pkt, timeout = 2, inter = 0, verbose=None, chainCC=0, retry=0, m
         remain = list(itertools.chain(*hsent.itervalues()))
         if multi:
             remain = [p for p in remain if not hasattr(p, '_answered')]
-            
+
         if autostop and len(remain) > 0 and len(remain) != len(tobesent):
             retry = autostop
-            
+
         tobesent = remain
         if len(tobesent) == 0:
             break
         retry -= 1
-        
-    if conf.debug_match:
-        debug.sent=plist.PacketList(remain[:],"Sent")
-        debug.match=plist.SndRcvList(ans[:])
 
-    #clean the ans list to delete the field _answered
+    if conf.debug_match:
+        debug.sent = plist.PacketList(remain[:], "Sent")
+        debug.match = plist.SndRcvList(ans[:])
+
+    # clean the ans list to delete the field _answered
     if (multi):
-        for s,r in ans:
+        for s, r in ans:
             if hasattr(s, '_answered'):
                 del(s._answered)
-    
+
     if verbose:
-        print "\nReceived %i packets, got %i answers, remaining %i packets" % (nbrecv+len(ans), len(ans), notans)
-    return plist.SndRcvList(ans),plist.PacketList(remain,"Unanswered")
+        print "\nReceived %i packets, got %i answers, remaining %i packets" % (nbrecv + len(ans), len(ans), notans)
+    return plist.SndRcvList(ans), plist.PacketList(remain, "Unanswered")
 
 
 import scapy.sendrecv
 scapy.sendrecv.sndrcv = sndrcv
 
-def sniff(count=0, store=1, offline=None, prn = None, lfilter=None, L2socket=None, timeout=None, *arg, **karg):
+
+def sniff(count=0, store=1, offline=None, prn=None, lfilter=None, L2socket=None, timeout=None, *arg, **karg):
     """Sniff packets
 sniff([count=0,] [prn=None,] [store=1,] [offline=None,] [lfilter=None,] + L2ListenSocket args) -> list of packets
 Select interface to sniff by setting conf.iface. Use show_interfaces() to see interface names.
@@ -183,12 +185,12 @@ L2socket: use the provided L2socket
 
     lst = []
     if timeout is not None:
-        stoptime = time.time()+timeout
+        stoptime = time.time() + timeout
     remain = None
     while 1:
         try:
             if timeout is not None:
-                remain = stoptime-time.time()
+                remain = stoptime - time.time()
                 if remain <= 0:
                     break
 
@@ -212,7 +214,7 @@ L2socket: use the provided L2socket
         except KeyboardInterrupt:
             break
     s.close()
-    return plist.PacketList(lst,"Sniffed")
+    return plist.PacketList(lst, "Sniffed")
 
 import scapy.sendrecv
 scapy.sendrecv.sniff = sniff
